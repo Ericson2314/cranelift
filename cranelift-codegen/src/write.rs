@@ -1,3 +1,4 @@
+
 //! Converting Cranelift IR to text.
 //!
 //! The `write` module provides the `write_function` function which converts an IR `Function` to an
@@ -513,6 +514,22 @@ pub fn write_operands(
                 sig_ref,
                 args[0],
                 DisplayValues(&args[1..])
+            )
+        }
+        CallTable {
+            func_ref, ref args, table, ..
+        } => write!(w, " {}({}), {}", func_ref, DisplayValues(args.as_slice(pool)), table),
+        CallTableIndirect {
+            sig_ref, ref args, table, ..
+        } => {
+            let args = args.as_slice(pool);
+            write!(
+                w,
+                " {}, {}({}), {}",
+                sig_ref,
+                args[0],
+                DisplayValues(&args[1..]),
+                table
             )
         }
         FuncAddr { func_ref, .. } => write!(w, " {}", func_ref),

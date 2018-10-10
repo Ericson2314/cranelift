@@ -286,6 +286,26 @@ call_indirect = Instruction(
         """,
         ins=(SIG, callee, args), outs=rvals, is_call=True)
 
+call_table = Instruction(
+        'call_table', r"""
+        Direct multi-return function call
+
+        Call a multi-return function which has been declared in the preamble.
+        The argument types must match the function's signature. The branches in
+        the branch table must match the return signatures of the function.
+        """,
+        ins=(FN, args, JT), is_call=True, is_branch=True, is_terminator=True)
+
+call_table_indirect = Instruction(
+        'call_table_indirect', r"""
+        Indirect multi-return function call.
+
+        Call the function pointed to by `callee` with the given arguments. The
+        called function must match the specified signature. The branches in
+        the branch table must match the return signatures of the function.
+        """,
+        ins=(SIG, callee, args, JT), is_call=True, is_branch=True, is_terminator=True)
+
 func_addr = Instruction(
         'func_addr', r"""
         Get the address of a function.

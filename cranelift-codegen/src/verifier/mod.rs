@@ -638,6 +638,20 @@ impl<'a> Verifier<'a> {
                 self.verify_sig_ref(inst, sig_ref, errors)?;
                 self.verify_value_list(inst, args, errors)?;
             }
+            CallTable {
+                func_ref, ref args, table, ..
+            } => {
+                self.verify_func_ref(inst, func_ref, errors)?;
+                self.verify_value_list(inst, args, errors)?;
+                self.verify_jump_table(inst, table, errors)?;
+            }
+            CallTableIndirect {
+                sig_ref, ref args, table, ..
+            } => {
+                self.verify_sig_ref(inst, sig_ref, errors)?;
+                self.verify_value_list(inst, args, errors)?;
+                self.verify_jump_table(inst, table, errors)?;
+            }
             FuncAddr { func_ref, .. } => {
                 self.verify_func_ref(inst, func_ref, errors)?;
             }

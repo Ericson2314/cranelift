@@ -2374,6 +2374,40 @@ impl<'a> Parser<'a> {
                     args: args.into_value_list(&[callee], &mut ctx.function.dfg.value_lists),
                 }
             }
+            InstructionFormat::CallTable => {
+                let func_ref = self.match_fn("expected function reference")?;
+                ctx.check_fn(func_ref, self.loc)?;
+                self.match_token(Token::LPar, "expected '(' before arguments")?;
+                let args = self.parse_value_list()?;
+                self.match_token(Token::RPar, "expected ')' after arguments")?;
+                self.match_token(Token::Comma, "expected ',' before return table")?;
+                let table = self.match_jt()?;
+                ctx.check_jt(table, self.loc)?;
+                InstructionData::CallTable {
+                    opcode,
+                    func_ref,
+                    args: args.into_value_list(&[], &mut ctx.function.dfg.value_lists),
+                    table,
+                }
+            }
+            InstructionFormat::CallTableIndirect => {
+                let sig_ref = self.match_sig("expected signature reference")?;
+                ctx.check_sig(sig_ref, self.loc)?;
+                self.match_token(Token::Comma, "expected ',' between operands")?;
+                let callee = self.match_value("expected SSA value callee operand")?;
+                self.match_token(Token::LPar, "expected '(' before arguments")?;
+                let args = self.parse_value_list()?;
+                self.match_token(Token::RPar, "expected ')' after arguments")?;
+                self.match_token(Token::Comma, "expected ',' before return table")?;
+                let table = self.match_jt()?;
+                ctx.check_jt(table, self.loc)?;
+                InstructionData::CallTableIndirect {
+                    opcode,
+                    sig_ref,
+                    args: args.into_value_list(&[callee], &mut ctx.function.dfg.value_lists),
+                    table,
+                }
+            }
             InstructionFormat::FuncAddr => {
                 let func_ref = self.match_fn("expected function reference")?;
                 ctx.check_fn(func_ref, self.loc)?;

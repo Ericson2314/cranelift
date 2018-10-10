@@ -148,6 +148,18 @@ pub enum SerInstData {
         args: Vec<String>,
         sig_ref: String,
     },
+    CallTable {
+        opcode: String,
+        args: Vec<String>,
+        func_ref: String,
+        table: String,
+    },
+    CallTableIndirect {
+        opcode: String,
+        args: Vec<String>,
+        sig_ref: String,
+        table: String,
+    },
     FuncAddr {
         opcode: String,
         func_ref: String,
@@ -526,6 +538,42 @@ pub fn get_inst_data(inst_index: Inst, func: &Function) -> SerInstData {
                 opcode: opcode.to_string(),
                 args: hold_args,
                 sig_ref: sig_ref.to_string(),
+            }
+        }
+        InstructionData::CallTable {
+            opcode,
+            ref args,
+            func_ref,
+            table,
+        } => {
+            let mut hold_args = Vec::new();
+            let args_iter = args.as_slice(&func.dfg.value_lists);
+            for arg in args_iter {
+                hold_args.push(arg.to_string());
+            }
+            SerInstData::CallTable {
+                opcode: opcode.to_string(),
+                args: hold_args,
+                func_ref: func_ref.to_string(),
+                table: table.to_string(),
+            }
+        }
+        InstructionData::CallTableIndirect {
+            opcode,
+            ref args,
+            sig_ref,
+            table,
+        } => {
+            let mut hold_args = Vec::new();
+            let args_iter = args.as_slice(&func.dfg.value_lists);
+            for arg in args_iter {
+                hold_args.push(arg.to_string());
+            }
+            SerInstData::CallTableIndirect {
+                opcode: opcode.to_string(),
+                args: hold_args,
+                sig_ref: sig_ref.to_string(),
+                table: table.to_string(),
             }
         }
         InstructionData::FuncAddr { opcode, func_ref } => SerInstData::FuncAddr {

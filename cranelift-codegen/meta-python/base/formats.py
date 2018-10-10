@@ -57,6 +57,8 @@ IndirectJump = InstructionFormat(VALUE, entities.jump_table)
 
 Call = InstructionFormat(func_ref, VARIABLE_ARGS)
 CallIndirect = InstructionFormat(sig_ref, VALUE, VARIABLE_ARGS)
+CallTable = InstructionFormat(func_ref, VARIABLE_ARGS, entities.jump_table)
+CallTableIndirect = InstructionFormat(sig_ref, VALUE, VARIABLE_ARGS, entities.jump_table)
 FuncAddr = InstructionFormat(func_ref)
 
 Load = InstructionFormat(memflags, VALUE, offset32)
