@@ -505,9 +505,9 @@ impl DataFlowGraph {
                 self.insts[inst].opcode().constraints().num_fixed_results(),
                 0
             );
-            let num_results = self.signatures[sig].returns.len();
-            for res_idx in 0..num_results {
-                let ty = self.signatures[sig].returns[res_idx].value_type;
+            let returns = self.signatures[sig].get_unwrap_single_returns();
+            for abi_param in returns {
+                let ty = abi_param.value_type;
                 if let Some(Some(v)) = reuse.next() {
                     debug_assert_eq!(self.value_type(v), ty, "Reused {} is wrong type", ty);
                     self.attach_result(inst, v);
@@ -515,7 +515,7 @@ impl DataFlowGraph {
                     self.append_result(inst, ty);
                 }
             }
-            num_results
+            returns.len()
         } else {
             // Create result values corresponding to the opcode's constraints.
             let constraints = self.insts[inst].opcode().constraints();
@@ -686,7 +686,7 @@ impl DataFlowGraph {
         // Not a fixed result, try to extract a return type from the call signature.
         self.call_signature(inst).and_then(|sigref| {
             self.signatures[sigref]
-                .returns
+                .get_unwrap_single_returns()
                 .get(result_idx - num_fixed_results)
                 .map(|&arg| arg.value_type)
         })
@@ -953,8 +953,9 @@ impl DataFlowGraph {
                 self.insts[inst].opcode().constraints().num_fixed_results(),
                 0
             );
-            for res_idx in 0..self.signatures[sig].returns.len() {
-                let ty = self.signatures[sig].returns[res_idx].value_type;
+            let returns = self.signatures[sig].get_unwrap_single_returns();
+            for (res_idx, abi_param) in returns.iter().enumerate() {
+                let ty = abi_param.value_type;
                 if let Some(v) = reuse.get(res_idx) {
                     self.set_value_type_for_parser(*v, ty);
                 }

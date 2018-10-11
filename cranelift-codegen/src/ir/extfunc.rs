@@ -23,7 +23,13 @@ pub struct Signature {
     /// The arguments passed to the function.
     pub params: Vec<AbiParam>,
     /// Values returned from the function.
-    pub returns: Vec<AbiParam>,
+    ///
+    /// Different return points may return different arguments, and be handled by different return
+    /// addresses in the callee, represented by the vectors within the outer vector. The first
+    /// (inner) vector is the "default" vector. When a legacy calling convention is extended, the
+    /// first entry is the signature for the original return address, and additional return
+    /// addresses' signatures come next.
+    pub multi_returns: Vec<Vec<AbiParam>>,
 
     /// Calling convention.
     pub call_conv: CallConv,
@@ -34,7 +40,7 @@ impl Signature {
     pub fn new(call_conv: CallConv) -> Self {
         Self {
             params: Vec::new(),
-            returns: Vec::new(),
+            multi_returns: Vec::new(),
             call_conv,
         }
     }
@@ -42,7 +48,7 @@ impl Signature {
     /// Clear the signature so it is identical to a fresh one returned by `new()`.
     pub fn clear(&mut self, call_conv: CallConv) {
         self.params.clear();
-        self.returns.clear();
+        self.multi_returns.clear();
         self.call_conv = call_conv;
     }
 
@@ -54,6 +60,30 @@ impl Signature {
     /// Find the index of a presumed unique special-purpose parameter.
     pub fn special_param_index(&self, purpose: ArgumentPurpose) -> Option<usize> {
         self.params.iter().rposition(|arg| arg.purpose == purpose)
+    }
+
+    pub fn get_single_returns(&self) -> Option<&Vec<AbiParam>> {
+        match *self.multi_returns {
+            [ref returns] => Some(returns),
+            _ => None,
+        }
+    }
+
+    pub fn get_single_returns_mut(&mut self) -> Option<&mut Vec<AbiParam>> {
+        match *self.multi_returns {
+            [ref mut returns] => Some(returns),
+            _ => None,
+        }
+    }
+
+    pub fn get_unwrap_single_returns(&self) -> &Vec<AbiParam> {
+        self.get_single_returns()
+            .expect("no instruction supports multi return yet")
+    }
+
+    pub fn get_unwrap_single_returns_mut(&mut self) -> &mut Vec<AbiParam> {
+        self.get_single_returns_mut()
+            .expect("no instruction supports multi return yet")
     }
 }
 
@@ -78,9 +108,23 @@ impl<'a> fmt::Display for DisplaySignature<'a> {
         write!(f, "(")?;
         write_list(f, &self.0.params, self.1)?;
         write!(f, ")")?;
-        if !self.0.returns.is_empty() {
-            write!(f, " -> ")?;
-            write_list(f, &self.0.returns, self.1)?;
+        match *self.0.multi_returns {
+            [] => write!(f, " -> !")?,
+            [ref returns] => {
+                if !returns.is_empty() {
+                    write!(f, " -> ")?;
+                    write_list(f, returns, self.1)?;
+                }
+            },
+            ref multi_returns => {
+                write!(f, " -> {{ ")?;
+                write_list(f, &multi_returns[0], self.1)?;
+                for returns in &multi_returns[1..] {
+                    write!(f, " | ")?;
+                    write_list(f, returns, self.1)?;
+                }
+                write!(f, " }}")?;
+            },
         }
         write!(f, " {}", self.0.call_conv)
     }

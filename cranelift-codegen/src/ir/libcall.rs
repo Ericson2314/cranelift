@@ -152,9 +152,11 @@ fn make_funcref_for_probestack(
     let mut sig = Signature::new(CallConv::Probestack);
     let rax = AbiParam::special_reg(reg_type, ArgumentPurpose::Normal, arg_reg);
     sig.params.push(rax);
+    let returns = vec![];
     if !isa.flags().probestack_func_adjusts_sp() {
-        sig.returns.push(rax);
+        returns.push(rax);
     }
+    sig.multi_returns.push(returns);
     make_funcref(LibCall::Probestack, func, sig, isa)
 }
 
@@ -169,9 +171,11 @@ fn make_funcref_for_inst(
     for &v in func.dfg.inst_args(inst) {
         sig.params.push(AbiParam::new(func.dfg.value_type(v)));
     }
+    let returns = vec![];
     for &v in func.dfg.inst_results(inst) {
-        sig.returns.push(AbiParam::new(func.dfg.value_type(v)));
+        returns.push(AbiParam::new(func.dfg.value_type(v)));
     }
+    sig.multi_returns.push(returns);
 
     make_funcref(libcall, func, sig, isa)
 }

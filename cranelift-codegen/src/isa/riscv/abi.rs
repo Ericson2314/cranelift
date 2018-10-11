@@ -98,20 +98,30 @@ pub fn legalize_signature(
     let mut args = Args::new(bits, isa_flags.enable_e());
     legalize_args(&mut sig.params, &mut args);
 
-    let mut rets = Args::new(bits, isa_flags.enable_e());
-    legalize_args(&mut sig.returns, &mut rets);
+    // Each return slot is independent, and thus has arg registers allocated independently.
+    for returns in sig.multi_returns.iter_mut() {
+        let mut rets = Args::new(bits, isa_flags.enable_e());
+        legalize_args(&mut returns, &mut rets);
+    }
 
-    if current {
+    // Add the link register as an argument and return value.
+    //
+    // The `jalr` instruction implementing a return can technically accept the return address
+    // in any register, but a micro-architecture with a return address predictor will only
+    // recognize it as a return if the address is in `x1`.
+    //
+    // Single return functions use this. No-return functions do not pass the return address at
+    // all, and thus don't need this. Multi-return functions only use this for the first
+    // return; the others are passed as additional function arguments (with respect to the
+    // calling convention). They thus spill first, which is fitting with their usual
+    // interpretation as cold error handling control edges. This is handled below.
+    if !current { return; }
+    if let Some(returns) = sig.multi_returns.get(0) {
         let ptr = Type::int(u16::from(bits)).unwrap();
 
-        // Add the link register as an argument and return value.
-        //
-        // The `jalr` instruction implementing a return can technically accept the return address
-        // in any register, but a micro-architecture with a return address predictor will only
-        // recognize it as a return if the address is in `x1`.
         let link = AbiParam::special_reg(ptr, ArgumentPurpose::Link, GPR.unit(1));
         sig.params.push(link);
-        sig.returns.push(link);
+        returns.push(link);
     }
 }
 
