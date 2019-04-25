@@ -299,9 +299,8 @@ pub trait TargetIsa: fmt::Display + Sync {
     ///
     /// The legalizer will adapt argument and return values as necessary at all ABI boundaries.
     ///
-    /// When this function is called to legalize the signature of the function currently being
-    /// compiled, `current` is true. The legalized signature can then also contain special purpose
-    /// arguments and return values such as:
+    ///  The legalized signature alsos contain special purpose arguments
+    ///  and return values such as:
     ///
     /// - A `link` argument representing the link registers on RISC architectures that don't push
     ///   the return address on the stack.
@@ -315,7 +314,7 @@ pub trait TargetIsa: fmt::Display + Sync {
     /// Arguments and return values for the caller's frame pointer and other callee-saved registers
     /// should not be added by this function. These arguments are not added until after register
     /// allocation.
-    fn legalize_signature(&self, sig: &mut ir::Signature, current: bool);
+    fn legalize_signature(&self, sig: &mut ir::Signature);
 
     /// Get the register class that should be used to represent an ABI argument or return value of
     /// type `ty`. This should be the top-level register class that contains the argument

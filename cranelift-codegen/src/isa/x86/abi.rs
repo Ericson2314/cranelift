@@ -139,7 +139,7 @@ impl ArgAssigner for Args {
 }
 
 /// Legalize `sig`.
-pub fn legalize_signature(sig: &mut ir::Signature, triple: &Triple, _current: bool) {
+pub fn legalize_signature(sig: &mut ir::Signature, triple: &Triple) {
     let bits;
     let mut args;
 

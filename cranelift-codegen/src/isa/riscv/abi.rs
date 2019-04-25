@@ -91,7 +91,6 @@ pub fn legalize_signature(
     sig: &mut ir::Signature,
     triple: &Triple,
     isa_flags: &settings::Flags,
-    current: bool,
 ) {
     let bits = triple.pointer_width().unwrap().bits();
 
@@ -101,18 +100,16 @@ pub fn legalize_signature(
     let mut rets = Args::new(bits, isa_flags.enable_e());
     legalize_args(&mut sig.returns, &mut rets);
 
-    if current {
-        let ptr = Type::int(u16::from(bits)).unwrap();
+    let ptr = Type::int(u16::from(bits)).unwrap();
 
-        // Add the link register as an argument and return value.
-        //
-        // The `jalr` instruction implementing a return can technically accept the return address
-        // in any register, but a micro-architecture with a return address predictor will only
-        // recognize it as a return if the address is in `x1`.
-        let link = AbiParam::special_reg(ptr, ArgumentPurpose::Link, GPR.unit(1));
-        sig.params.push(link);
-        sig.returns.push(link);
-    }
+    // Add the link register as an argument and return value.
+    //
+    // The `jalr` instruction implementing a return can technically accept the return address
+    // in any register, but a micro-architecture with a return address predictor will only
+    // recognize it as a return if the address is in `x1`.
+    let link = AbiParam::special_reg(ptr, ArgumentPurpose::Link, GPR.unit(1));
+    sig.params.push(link);
+    sig.returns.push(link);
 }
 
 /// Get register class for a type appearing in a legalized signature.

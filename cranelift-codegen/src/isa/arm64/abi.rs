@@ -10,7 +10,6 @@ use crate::settings as shared_settings;
 pub fn legalize_signature(
     _sig: &mut ir::Signature,
     _flags: &shared_settings::Flags,
-    _current: bool,
 ) {
     unimplemented!()
 }

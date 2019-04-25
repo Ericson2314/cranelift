@@ -36,9 +36,9 @@ use std::vec::Vec;
 /// change the entry block arguments, calls, or return instructions, so this can leave the function
 /// in a state with type discrepancies.
 pub fn legalize_signatures(func: &mut Function, isa: &TargetIsa) {
-    legalize_signature(&mut func.signature, true, isa);
+    legalize_signature(&mut func.signature, isa);
     for sig_data in func.dfg.signatures.values_mut() {
-        legalize_signature(sig_data, false, isa);
+        legalize_signature(sig_data, isa);
     }
 
     if let Some(entry) = func.layout.entry_block() {
@@ -50,14 +50,14 @@ pub fn legalize_signatures(func: &mut Function, isa: &TargetIsa) {
 /// Legalize the libcall signature, which we may generate on the fly after
 /// `legalize_signatures` has been called.
 pub fn legalize_libcall_signature(signature: &mut Signature, isa: &TargetIsa) {
-    legalize_signature(signature, false, isa);
+    legalize_signature(signature, isa);
 }
 
 /// Legalize the given signature.
 ///
 /// `current` is true if this is the signature for the current function.
-fn legalize_signature(signature: &mut Signature, current: bool, isa: &TargetIsa) {
-    isa.legalize_signature(signature, current);
+fn legalize_signature(signature: &mut Signature, isa: &TargetIsa) {
+    isa.legalize_signature(signature);
 }
 
 /// Legalize the entry block parameters after `func`'s signature has been legalized.
